@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -21,14 +22,11 @@
  * if you like, and it can span multiple lines.
  *
  * @package    mod_uploadfile
- * @copyright  2016 Your Name <your@email.address>
+ * @copyright  2018 Carlos Eduardo Vieira <https://www.linkedin.com/in/carlos-eduardo-vieira/>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-// Replace uploadfile with the name of your module and remove this line.
-
 require (dirname(dirname(dirname(__FILE__))) . '/config.php');
 require (dirname(__FILE__) . '/lib.php');
-require './classes/uploadForm.class.php';
 
 $id = optional_param('id', 0, PARAM_INT);
 $n = optional_param('n', 0, PARAM_INT);
@@ -46,8 +44,7 @@ if ($id) {
 }
 
 require_login($course, true, $cm);
-$context_course = context_course::instance($course->id);
-
+$context = context_system::instance();
 $event = \mod_uploadfile\event\course_module_viewed::create(array(
             'objectid' => $PAGE->cm->instance,
             'context' => $PAGE->context,
@@ -63,22 +60,31 @@ $modcontext = context_module::instance($cm->id);
 
 echo $OUTPUT->header();
 
-    $uploaded = new uploadForm('./view.php?id='.$id);
-    $uploaded->display();
-    
-    $file = $uploaded->get_data(); 
-    
-    if($file){
-        
-        echo '<pre>';
-        print_r($file);
-        echo '</pre>';
+echo "<a href='./upload.php?id={$id}'><input class='btn btn-primary' type='button' value='Manage Files'></a>";
+echo "<a style='padding-left:1%' href='./view.php?id={$id}'><input class='btn btn-primary' type='button' value='View Files'></a>";
+echo "<br /><br /><br />";
+
+// ---------
+// Display Managed Files!
+// ---------
+$fs = get_file_storage();
+if ($files = $fs->get_area_files($context->id, 'mod_uploadfile', 'attachment', '0', 'sortorder', false)) {
+
+    // Look through each file being managed - pt_br verificar todos os arquivos que estao sendo gerenciados pelo filemanager
+    foreach ($files as $file) {
+        // Build the File URL. Long process! But extremely accurate. - pt_br cria uma url para o arquivo
+        $fileurl = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(), $file->get_itemid(), $file->get_filepath(), $file->get_filename());
+        // Display link for file download - pt_bt exibe link para download do arquivo
+        $download_url = $fileurl->get_port() ? $fileurl->get_scheme() . '://' . $fileurl->get_host() . $fileurl->get_path() . ':' . $fileurl->get_port() : $fileurl->get_scheme() . '://' . $fileurl->get_host() . $fileurl->get_path();
+        echo '<a href="' . $download_url . '">' . $file->get_filename() . '</a><br/>';
+
+        // Display for file - pt_bt exibe o arquivo em caso de imagem.
+        if (file_extension_in_typegroup($file->get_filename(), 'web_image')) {
+            echo html_writer::empty_tag('img', array('src' => $download_url));
+        }
     }
-    
-    
-    
-    
-    
-    
-    
+} else {
+    echo $OUTPUT->notification(format_string('Please upload an image first'));
+}
+
 echo $OUTPUT->footer();
