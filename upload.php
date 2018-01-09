@@ -41,7 +41,7 @@ $filemanageropts = array('subdirs' => 0, 'maxbytes' => '0', 'maxfiles' => 50, 'c
 $customdata = array('filemanageropts' => $filemanageropts);
 
 // Create a new form object (found in lib.php) - pt_br neste momento ele cria o formulario usando a api moodleform e passa esse conjunto de opcoes para o filemanager
-$mform = new uploadForm(null, $customdata);
+$mform = new uploadForm('./upload.php?id='.$id, $customdata);
 
 // ---------
 // CONFIGURE FILE MANAGER
