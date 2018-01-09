@@ -34,26 +34,33 @@ $PAGE->set_title(format_string($uploadfile->name));
 $PAGE->set_heading(format_string($course->fullname));
 $modcontext = context_module::instance($cm->id);
 
-// Create some options for the file manager
+/* Create some options for the file manager - pt_br cria algumas opcoes para o filemanager você pode consultar o conjunto de opcoes disponiveis
+  como imagem, zip, audio etc consultando esta pagina: https://docs.moodle.org/dev/Using_the_File_API_in_Moodle_forms
+ */
 $filemanageropts = array('subdirs' => 0, 'maxbytes' => '0', 'maxfiles' => 50, 'context' => $context);
 $customdata = array('filemanageropts' => $filemanageropts);
-// Create a new form object (found in lib.php)
+
+// Create a new form object (found in lib.php) - pt_br neste momento ele cria o formulario usando a api moodleform e passa esse conjunto de opcoes para o filemanager
 $mform = new uploadForm(null, $customdata);
+
 // ---------
 // CONFIGURE FILE MANAGER
 // ---------
-// From http://docs.moodle.org/dev/Using_the_File_API_in_Moodle_forms#filemanager
+
 $itemid = 0; // This is used to distinguish between multiple file areas, e.g. different student's assignment submissions, or attachments to different forum posts, in this case we use '0' as there is no relevant id to use
-// Fetches the file manager draft area, called 'attachments' 
+// Fetches the file manager draft area, called 'attachments' - pt_br Obtem a area de rascunho do gerenciador de arquivos, chamada "attachments"
 $draftitemid = file_get_submitted_draft_itemid('attachments');
-// Copy all the files from the 'real' area, into the draft area
+
+// Copy all the files from the 'real' area, into the draft area pt_br Copie todos os arquivos da area "real" onde estao salvos, para a area de rascunho
 file_prepare_draft_area($draftitemid, $context->id, 'mod_uploadfile', 'attachment', $itemid, $filemanageropts);
+
 // Prepare the data to pass into the form - normally we would load this from a database, but, here, we have no 'real' record to load
+//pt_br Prepare os dados para passar no formulario - normalmente devemos carregar isso a partir de um banco de dados, mas, aqui, nao temos registro "real" para carregar
 $entry = new stdClass();
-$entry->attachments = $draftitemid; // Add the draftitemid to the form, so that 'file_get_submitted_draft_itemid' can retrieve it
+$entry->attachments = $draftitemid; // Add the draftitemid to the form, so that 'file_get_submitted_draft_itemid' can retrieve it - pt_br Adicione o draftitemid ao formulario, de modo que 'file_get_submitted_draft_itemid' possa recupera-lo
 // --------- 
 // Set form data
-// This will load the file manager with your previous files
+// This will load the file manager with your previous files - pt_br neste momento ele preenche o formulario com o dado do upload jah salvo anteriormente caso haja.
 $mform->set_data($entry);
 // ===============
 //
@@ -76,7 +83,6 @@ if ($mform->is_cancelled()) {
     echo '<p><p>';
     echo $OUTPUT->notification(format_string('Handle form cancel operation, if cancel button is present on form'));
     echo "<a href='./upload.php?id={$id}'><input type='button' value='Try Again' /><a>";
-    
 } else if ($data = $mform->get_data()) {
     // SUCCESS
     echo '<h1>Success!</h1>';
