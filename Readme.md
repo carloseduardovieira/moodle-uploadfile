@@ -40,15 +40,16 @@ class uploadForm extends moodleform {
 
 Este arquivo é o responsável pela criação e gerência do formulário utilizado para este estudo.
 
-en - Create some options for the file manager
-pt_br -  Definindo algumas opções para o "filemanager" você pode definir quais tipos de arquivos deseja permitir para upload e também o tamanho máximo. [leia mais sobre os tipos de arquivos permitidos aqui] [listadearquivos] 
+Create some options for the file manager.
+pt_br -  Definindo algumas opções para o "filemanager" você pode definir quais tipos de arquivos deseja permitir para upload e também o tamanho máximo. leia mais sobre os tipos de arquivos permitidos [aqui][listadearquivos] 
 
 
 ```php
 $filemanageropts = array('subdirs' => 0, 'maxbytes' => '0', 'maxfiles' => 50, 'context' => $context);
 $customdata = array('filemanageropts' => $filemanageropts);
 ```
-Create a new form object (found in classes/uploadForm.class.php) - pt_br neste momento ele cria o formulario usando a api moodleform e passa o $customdata como conjunto de opcoes para o filemanager
+Create a new form object (found in classes/uploadForm.class.php).
+pt_br neste momento ele cria o formulario usando a api moodleform e passa o $customdata como conjunto de opcoes para o filemanager
 
 ```php
 $mform = new uploadForm('./upload.php?id='.$id, $customdata);
@@ -56,25 +57,27 @@ $mform = new uploadForm('./upload.php?id='.$id, $customdata);
 
 ##### CONFIGURE FILE MANAGER
 
-This is used to distinguish between multiple file areas, e.g. different student's assignment submissions, or attachments to different forum posts, in this case we use '0' as there is no relevant id to use
+This is used to distinguish between multiple file areas, e.g. different student's assignment submissions, or attachments to different forum posts, in this case we use '0' as there is no relevant id to use.
 
 ```php
 $itemid = 0;
 ``` 
-Fetches the file manager draft area, called 'attachments' - pt_br Obtem a area de rascunho do gerenciador de arquivos, chamada "attachments"
+Fetches the file manager draft area, called 'attachments'.
+pt_br Obtem a area de rascunho do gerenciador de arquivos, chamada "attachments".
 
 ```php
 $draftitemid = file_get_submitted_draft_itemid('attachments');
 ``` 
-Copy all the files from the 'real' area, into the draft area pt_br Copie todos os arquivos da area "real" onde estao salvos, para a area de rascunho
+Copy all the files from the 'real' area, into the draft area. 
+pt_br Copie todos os arquivos da area "real" onde estao salvos, para a area de rascunho.
 
 ```php
 file_prepare_draft_area($draftitemid, $context->id, 'mod_uploadfile', 'attachment', $itemid, $filemanageropts);
 ``` 
 Prepare the data to pass into the form - normally we would load this from a database, but, here, we have no 'real' record to load.
 pt_br Prepare os dados para passar no formulario - normalmente devemos carregar isso a partir de um banco de dados, mas, aqui, nao temos registro "real" para carregar.
-Add the draftitemid to the form, so that 'file_get_submitted_draft_itemid' can retrieve it. 
-pt_br Adicione o draftitemid ao formulario, de modo que 'file_get_submitted_draft_itemid' possa recupera-lo.
+
+Add the draftitemid to the form, so that 'file_get_submitted_draft_itemid' can retrieve it.
 
 ```php
 $entry = new stdClass();
@@ -82,7 +85,8 @@ $entry->attachments = $draftitemid;
 ``` 
 
 Set form data
-This will load the file manager with your previous files - pt_br neste momento ele preenche o formulário com o dado do upload já salvo anteriormente caso haja.
+This will load the file manager with your previous files. 
+pt_br neste momento ele preenche o formulário com o dado do upload já salvo anteriormente caso haja.
 
 ```php
 $mform->set_data($entry);
