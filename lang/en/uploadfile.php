@@ -40,7 +40,3 @@ $string['uploadfilename_help'] = 'This is the content of the help tooltip associ
 $string['uploadfile'] = 'uploadfile';
 $string['pluginadministration'] = 'uploadfile administration';
 $string['pluginname'] = 'uploadfile';
-$string['editor'] = 'Html editor';
-$string['obrigatorio'] = 'Required field!';
-$string['salvar'] = 'Save';
-$string['abrireditor'] = 'Open html editor';

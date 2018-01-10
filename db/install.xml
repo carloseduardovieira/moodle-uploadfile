@@ -21,18 +21,6 @@
             <INDEXES>
                 <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
             </INDEXES>
-        </TABLE>
-    
-        <TABLE NAME="uploadfile_editor" COMMENT="Texto a ser exibido">
-            <FIELDS>
-                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true"/>
-                <FIELD NAME="instance" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false"/>
-                <FIELD NAME="editor" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Editor que será exibido no moodle com html"/>               
-            </FIELDS>
-            <KEYS>
-                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-                <KEY NAME="instance" TYPE="foreign" FIELDS="instance" REFTABLE="uploadfile" REFFIELDS="id"/>
-            </KEYS>
-        </TABLE>
+        </TABLE>        
     </TABLES>
 </XMLDB>
