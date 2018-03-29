@@ -26,7 +26,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 require (dirname(dirname(dirname(__FILE__))) . '/config.php');
-require (dirname(__FILE__) . '/lib.php');
+require './model/UploadFileModel.class.php';
 
 $id = optional_param('id', 0, PARAM_INT);
 $n = optional_param('n', 0, PARAM_INT);
@@ -57,32 +57,25 @@ $PAGE->set_url('/mod/uploadfile/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($uploadfile->name));
 $PAGE->set_heading(format_string($course->fullname));
 $modcontext = context_module::instance($cm->id);
+$model = new UploadFileModel();
+$file = $model->get($uploadfile->id);
 
 echo $OUTPUT->header();
 
-echo "<a href='./upload.php?id={$id}'><input class='btn btn-primary' type='button' value='Manage Files'></a>";
-echo "<a style='padding-left:1%' href='./view.php?id={$id}'><input class='btn btn-primary' type='button' value='View Files'></a>";
-echo "<br /><br /><br />";
+echo html_writer::start_tag( 'a', array( 'href' => "./upload.php?id={$id}&action=ADD" ) )
+        .html_writer::start_tag( 'button', array( 'type' => 'button', 'class' => 'btn btn-primary', 'style' =>'margin:3%; width:20%' ) )
+        .format_string( 'Manage Files' )
+        .html_writer::end_tag('button')
+        .html_writer::end_tag( 'a' );
 
-// ---------
-// Display Managed Files!
-// ---------
-$fs = get_file_storage();
-if ($files = $fs->get_area_files($context->id, 'mod_uploadfile', 'attachment', '0', 'sortorder', false)) {
+if ( $imageurl = print_image_uploadfile( $file->attachments, $context->id ) ) {
+    
+    // EN - for this plugin I am using to display an image, if you have imported another type of file,
+    // treat it the way you want.
+    // PT_BR para este plugin estou utilizando para exibicao uma imagem, caso voce tenha importado outro tipo de arquivo,
+    // trate-o da maneira desejada.    
+    echo html_writer::empty_tag('img', array('width' => '100%', 'height' => '100%', 'src' => $imageurl));    
 
-    // Look through each file being managed - pt_br verificar todos os arquivos que estao sendo gerenciados pelo filemanager
-    foreach ($files as $file) {
-        // Build the File URL. Long process! But extremely accurate. - pt_br cria uma url para o arquivo
-        $fileurl = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(), $file->get_itemid(), $file->get_filepath(), $file->get_filename());
-        // Display link for file download - pt_bt exibe link para download do arquivo
-        $download_url = $fileurl->get_port() ? $fileurl->get_scheme() . '://' . $fileurl->get_host() . $fileurl->get_path() . ':' . $fileurl->get_port() : $fileurl->get_scheme() . '://' . $fileurl->get_host() . $fileurl->get_path();
-        echo '<a href="' . $download_url . '">' . $file->get_filename() . '</a><br/>';
-
-        // Display for file - pt_bt exibe o arquivo em caso de imagem.
-        if (file_extension_in_typegroup($file->get_filename(), 'web_image')) {
-            echo html_writer::empty_tag('img', array('src' => $download_url));
-        }
-    }
 } else {
     echo $OUTPUT->notification(format_string('Please upload an image first'));
 }

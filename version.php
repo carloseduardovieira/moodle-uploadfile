@@ -30,6 +30,6 @@ defined('MOODLE_INTERNAL') || die();
 $plugin->component = 'mod_uploadfile';
 $plugin->version = 1;
 $plugin->release = 'v1';
-$plugin->requires = 2014051200;
+$plugin->requires = 2015051200;
 $plugin->maturity = MATURITY_STABLE;
 $plugin->cron = 0;

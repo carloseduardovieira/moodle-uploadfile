@@ -27,53 +27,71 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-/*
- * Does something really useful with the passed things
- *
- * @param array $things
- * @return object
- *function uploadfile_do_something_useful(array $things) {
- *    return new stdClass();
- *}
- */
+class uploadfile {
 
-class uploadfile{     
-    
-    const CERTIFICATE_COMPONENT_NAME = 'mod_uploadfile';
-    const CERTIFICATE_IMAGE_FILE_AREA = 'image';
-    
-    public static function get_image_fileinfo($context) {
+    const COMPONENT_NAME = 'mod_uploadfile';
+    const IMAGE_FILE_AREA = 'image';
+
+    /**
+     * Get params for object
+     * 
+     * @param mixed $context The module context object or id
+     * @return the first page background image fileinfo
+     */
+    public static function get_uploadfile_fileinfo($context) {
         if (is_object($context)) {
             $contextid = $context->id;
         } else {
             $contextid = $context;
         }
-        
-        return array('contextid' => $contextid, //id contexto
-                          'component' => self::CERTIFICATE_COMPONENT_NAME, // nome do plugin
-                          'filearea' => self::CERTIFICATE_IMAGE_FILE_AREA, // nome do tipo de arquivo
-                          'itemid' => 1, 
-                          'filepath' => '/'); 
-    }
-    
-    
-}
 
-function uploadfile_set_mainfile($data) {
-    global $DB;
-    $fs = get_file_storage();
-    $cmid = $data->coursemodule;
-    $draftitemid = $data->files;
+        return array('contextid' => $contextid, // ID of context
+            'component' => self::COMPONENT_NAME, // usually = table name
+            'filearea' => self::IMAGE_FILE_AREA, // usually = table name
+            'itemid' => 1, // usually = ID of row in table
+            'filepath' => '/'); // any path beginning and ending in /
+    }
 
-    $context = context_module::instance($cmid);
-    if ($draftitemid) {
-        $options = array('subdirs' => true, 'embed' => false);
-        file_save_draft_area_files($draftitemid, $context->id, 'mod_uploadfile', 'content', 0, $options);
+    /**
+     * Save upload files in $fileinfo array and return the filename
+     * 
+     * @param string $form_item_id Upload file form id
+     * @param array $fileinfo The file info array, where to store uploaded file
+     * @return string filename
+     */
+    public function save_upload_file($form_item_id, $context) {
+
+        $fileinfo = $this->get_uploadfile_fileinfo($context);
+
+        // Clear file area
+        if (empty($fileinfo['itemid'])) {
+            $fileinfo['itemid'] = '';
+        }
+
+        $fs = get_file_storage();
+        $fs->delete_area_files($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'], $fileinfo['itemid']);
+        file_save_draft_area_files($form_item_id, $fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'], $fileinfo['itemid']);
+        // Get only files, not directories
+        $files = $fs->get_area_files($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'], $fileinfo['itemid'], '', false);
+        $file = array_shift($files);
+        return $file->get_filename();
     }
-    $files = $fs->get_area_files($context->id, 'mod_uploadfile', 'content', 0, 'sortorder', false);
-    if (count($files) == 1) {
-        // only one file attached, set it as main file automatically
-        $file = reset($files);
-        file_set_sortorder($context->id, 'mod_uploadfile', 'content', 0, $file->get_filepath(), $file->get_filename(), 1);
+
+    public function get_image($imagem, $context, $cm, $course) {
+        global $CFG;
+
+        $fs = get_file_storage();
+
+        if (!empty($imagem)) {
+
+            $fileinfo = self::get_uploadfile_fileinfo($context);
+
+            $file = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'], $fileinfo['itemid'], $fileinfo['filepath'], $imagem);
+
+            if ( !$file ) {
+                return false;
+            }
+        }
     }
+
 }

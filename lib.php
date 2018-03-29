@@ -69,6 +69,33 @@ function uploadfile_supports($feature) {
 //
 // ===============
 // I M P O R T A N T
+//
+/**
+ * return url image for display
+ */
+function print_image_uploadfile($itemid, $contextid) {
+
+    $fs = get_file_storage();
+    if ($files = $fs->get_area_files($contextid, 'mod_uploadfile', 'attachment', "{$itemid}", 'sortorder', false)) {              
+        foreach ($files as $file) {
+            $fileurl = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(), $file->get_itemid(), $file->get_filepath(), $file->get_filename());           
+            $imageurl = $fileurl->get_port() ? $fileurl->get_scheme() . '://' . $fileurl->get_host() . $fileurl->get_path() . ':' . $fileurl->get_port() : $fileurl->get_scheme() . '://' . $fileurl->get_host() . $fileurl->get_path();          
+            if (file_extension_in_typegroup($file->get_filename(), 'web_image')) {
+                return $imageurl;
+            }
+        }
+    } 
+    
+    return false;
+}
+
+
+// ===============
+//
+//	Plugin File
+//
+// ===============
+// I M P O R T A N T
 // 
 // This is the most confusing part. For each plugin using a file manager will automatically
 // look for this function. It always ends with _pluginfile. Depending on where you build
@@ -82,8 +109,8 @@ function mod_uploadfile_pluginfile($course, $cm, $context, $filearea, $args, $fo
     if ($filearea != 'attachment') {
         return false;
     }
-    $itemid = (int)array_shift($args);
-    if ($itemid != 0) {
+    $itemid = (int) array_shift($args);
+    if (!$itemid) {
         return false;
     }
     $fs = get_file_storage();
@@ -91,7 +118,7 @@ function mod_uploadfile_pluginfile($course, $cm, $context, $filearea, $args, $fo
     if (empty($args)) {
         $filepath = '/';
     } else {
-        $filepath = '/'.implode('/', $args).'/';
+        $filepath = '/' . implode('/', $args) . '/';
     }
     $file = $fs->get_file($context->id, 'mod_uploadfile', $filearea, $itemid, $filepath, $filename);
     if (!$file) {
@@ -105,7 +132,10 @@ function mod_uploadfile_pluginfile($course, $cm, $context, $filearea, $args, $fo
  * Saves a new instance of the uploadfile into the database
  *
  * Given an object containing all the necessary data,
- * (defined by the form in mod_form.php) this function
+ * (defined 
+ * 
+ * 
+ * by the form in mod_form.php) this function
  * will create a new instance and return the id number
  * of the new instance.
  *

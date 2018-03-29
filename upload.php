@@ -3,9 +3,13 @@
 require (dirname(dirname(dirname(__FILE__))) . '/config.php');
 require (dirname(__FILE__) . '/lib.php');
 require './classes/uploadForm.class.php';
+require './model/UploadFileModel.class.php';
 
 $id = optional_param('id', 0, PARAM_INT);
 $n = optional_param('n', 0, PARAM_INT);
+$action = optional_param('action', '', PARAM_RAW);
+$delete = optional_param('delete', '', PARAM_RAW);
+$fileid = optional_param('idfile', 0, PARAM_INT);
 
 if ($id) {
     $cm = get_coursemodule_from_id('uploadfile', $id, 0, false, MUST_EXIST);
@@ -33,65 +37,89 @@ $PAGE->set_url('/mod/uploadfile/upload.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($uploadfile->name));
 $PAGE->set_heading(format_string($course->fullname));
 $modcontext = context_module::instance($cm->id);
+define('VIEW_URL_LINK', "./view.php?id=" . $id);
 
-/* Create some options for the file manager - pt_br cria algumas opcoes para o filemanager você pode consultar o conjunto de opcoes disponiveis
-  como imagem, zip, audio etc consultando esta pagina: https://docs.moodle.org/dev/Using_the_File_API_in_Moodle_forms
- */
-$filemanageropts = array('subdirs' => 0, 'maxbytes' => '0', 'maxfiles' => 50, 'context' => $context);
-$customdata = array('filemanageropts' => $filemanageropts);
+echo $OUTPUT->header();
 
-// Create a new form object (found in lib.php) - pt_br neste momento ele cria o formulario usando a api moodleform e passa esse conjunto de opcoes para o filemanager
-$mform = new uploadForm('./upload.php?id='.$id, $customdata);
+echo html_writer::start_tag( 'a', array( 'href' => "./view.php?id={$id}" ) )
+        .html_writer::start_tag( 'button', array( 'type' => 'button', 'class' => 'btn btn-primary', 'style' =>'margin:3%; width:20%' ) )
+        .format_string( 'View Files' )
+        .html_writer::end_tag('button')
+        .html_writer::end_tag( 'a' );
+
+echo html_writer::start_tag( 'a', array( 'href' => "./upload.php?id={$id}&action=DELETE" ) )
+        .html_writer::start_tag( 'button', array( 'type' => 'button', 'class' => 'btn btn-danger', 'style' =>'margin:3%; width:20%' ) )
+        .format_string( 'Delete File' )
+        .html_writer::end_tag('button')
+        .html_writer::end_tag( 'a' );
+
+$model = new UploadFileModel();
+$file = $model->get( $uploadfile->id );
+
+if ($action == 'DELETE' ) {
+    
+    if ( $delete == 'ConfirmDelete' ) {
+        $model->delete( $uploadfile->id, $file->attachments );
+        redirect( VIEW_URL_LINK );    
+    }
+    
+    echo $OUTPUT->confirm( format_string( "Are you sure you want to delete this file" ),
+            "upload.php?id={$id}&action=DELETE&delete=ConfirmDelete", $CFG->wwwroot . '/mod/uploadfile/view.php?id=' . $id );
+
+    echo $OUTPUT->footer();
+    die();
+}
+
+// EN - Prepare the data to pass into the form with instance actualy
+// PT_BR Obtendo dados do arquivo gravados no banco, da instancia atual.
+if( $file ) {
+    
+    $action = 'UPDATE';
+    
+}
+
+// EN - Create a new form object (found in lib.php) 
+// PT_BR - Cria um formulario usando a api moodleform
+$mform = new uploadForm( './upload.php?id='.$id. "&action={$action}&idfile={$file->id}" );
 
 // ---------
 // CONFIGURE FILE MANAGER
 // ---------
 
-$itemid = 0; // This is used to distinguish between multiple file areas, e.g. different student's assignment submissions, or attachments to different forum posts, in this case we use '0' as there is no relevant id to use
-// Fetches the file manager draft area, called 'attachments' - pt_br Obtem a area de rascunho do gerenciador de arquivos, chamada "attachments"
-$draftitemid = file_get_submitted_draft_itemid('attachments');
+// EN - Copy all the files from the 'real' area, into the draft area.
+// PT_BR - Prepara o arquivo para ser manipulado, obtendo-o do bd para uma area de rascunho.
+file_prepare_draft_area($file->attachments, $context->id, 'mod_uploadfile', 'attachment', $file->attachments, null);
 
-// Copy all the files from the 'real' area, into the draft area pt_br Copie todos os arquivos da area "real" onde estao salvos, para a area de rascunho
-file_prepare_draft_area($draftitemid, $context->id, 'mod_uploadfile', 'attachment', $itemid, $filemanageropts);
+// EN - Set form data: This will load the file manager with your previous files
+// PT_BR -  Seta no formulario os dados do possivel upload ja feito.
+$mform->set_data($file);
 
-// Prepare the data to pass into the form - normally we would load this from a database, but, here, we have no 'real' record to load
-//pt_br Prepare os dados para passar no formulario - normalmente devemos carregar isso a partir de um banco de dados, mas, aqui, nao temos registro "real" para carregar
-$entry = new stdClass();
-$entry->attachments = $draftitemid; // Add the draftitemid to the form, so that 'file_get_submitted_draft_itemid' can retrieve it - pt_br Adicione o draftitemid ao formulario, de modo que 'file_get_submitted_draft_itemid' possa recupera-lo
-// --------- 
-// Set form data
-// This will load the file manager with your previous files - pt_br neste momento ele preenche o formulario com o dado do upload jah salvo anteriormente caso haja.
-$mform->set_data($entry);
-// ===============
-//
-//
-// PAGE OUTPUT
-//
-//
-// ===============
-echo $OUTPUT->header();
+if ( $mform->is_cancelled() ) {
+    
+     redirect( VIEW_URL_LINK );
+    
+} else if ( $formdata = $mform->get_data() ) {
+    
+    // EN - Saves the form loaded file to the database in the files table.
+    // PT_BR - Salva o arquivo carregado do formulario na tabela de arquivos do moodle BD.
+    file_save_draft_area_files( $formdata->attachments, $context->id, 'mod_uploadfile', 'attachment', $formdata->attachments, $mform->get_filemanager_options_array() );
 
-echo "<a href='./upload.php?id={$id}'><input class='btn btn-primary' type='button' value='Manage Files'></a>";
-echo "<a style='padding-left:1%' href='./view.php?id={$id}'><input class='btn btn-primary' type='button' value='View Files'></a>";
-echo "<br /><br /><br />";
-// ----------
-// Form Submit Status
-// ----------
-if ($mform->is_cancelled()) {
-    // CANCELLED
-    echo '<h1>Cancelled</h1>';
-    echo '<p><p>';
-    echo $OUTPUT->notification(format_string('Handle form cancel operation, if cancel button is present on form'));
-    echo "<a href='./upload.php?id={$id}'><input type='button' value='Try Again' /><a>";
-} else if ($data = $mform->get_data()) {
-    // SUCCESS
-    echo '<h1>Success!</h1>';
-    echo '<p>In this case you process validated data. $mform->get_data() returns data posted in form.<p>';
-    // Save the files submitted
-    file_save_draft_area_files($draftitemid, $context->id, 'mod_uploadfile', 'attachment', $itemid, $filemanageropts);
-} else {
-    // FAIL / DEFAULT
-    echo '<h1 style="text-align:center">Upload file</h1>';
-    $mform->display();
+    // EN - Save or update in local table uploadfile_files.
+    // PT_BR - Salva ou atualiza na tabela local uploadfile_files.
+    $formdata->instance = $cm->instance;
+    if ( $action == 'ADD' ) {
+        
+        $model->save( $formdata );        
+        
+    } else {
+        
+        $formdata->id = $fileid;
+        $model->update( $formdata );
+    }    
+
+    redirect( VIEW_URL_LINK );
 }
+
+
+$mform->display();
 echo $OUTPUT->footer();

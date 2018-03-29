@@ -21,6 +21,17 @@
             <INDEXES>
                 <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
             </INDEXES>
+        </TABLE> 
+        <TABLE NAME="uploadfile_files" COMMENT="Default comment for uploadfile, please edit me">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true"/>
+                <FIELD NAME="instance" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false"/>
+                <FIELD NAME="attachments" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="File name to retrieve and display"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="instance" TYPE="foreign" FIELDS="instance" REFTABLE="uploadfile" REFFIELDS="id"/>
+            </KEYS>
         </TABLE>        
     </TABLES>
 </XMLDB>
