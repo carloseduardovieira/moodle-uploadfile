@@ -177,9 +177,7 @@ if ($files = $fs->get_area_files($context->id, 'mod_uploadfile', 'attachment', '
 }
 ```
 
-I am sorry for my english language ;( I'm a student, but soon I'll be much better.
-
-If following the tutorial, do not get Success, install the plugin and debug to see its operation, sometimes we can forget to comment on something xD.
+If following the tutorial, does not get Success, install the plugin and debug to see its operation, sometimes we can forget to comment on something xD.
 Caso ao seguir o tutorial, não obter Êxito, instale o plugin e depura para ver seu funcionamento, às vezes podemos nos esquecer de comentar sobre alguma coisa xD.
 
 
